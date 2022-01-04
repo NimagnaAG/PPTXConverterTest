@@ -2,6 +2,7 @@
 
 #include <QFileDialog>
 #include <QTime>
+#include <QBitmap>
 
 #include <Export/SaveFormat.h>
 #include <DOM/Presentation.h>
@@ -9,7 +10,11 @@
 #include <DOM/ISlide.h>
 #include <DOM/ISlidesize.h>
 #include <drawing/imaging/image_format.h>
+#include <drawing/image.h>
 #include <system/string.h>
+#include <system/io/stream.h>
+#include <system/io/memory_stream.h>
+#include <system/io/file_stream.h>
 #include <drawing/bitmap.h>
 #include <system/io/directory.h>
 
@@ -68,22 +73,41 @@ void PPTXConverterTestApp::on_pushButton_clicked()
   float ScaleY = (float)(1.0 / sizeH) * desiredH;
   auto PngScale = ui.doubleSpinBox->value();
 
-  ui.plainTextEdit->appendPlainText(QString("\nStarting conversion to PNG").arg(filename));
+
+  ui.plainTextEdit->appendPlainText(QString("\nStarting conversion to SVG").arg(filename));
   for (int i = 0; i < count; ++i)
   {
-    ui.plainTextEdit->appendPlainText(QString("> Page %1/%2").arg(i + 1).arg(count));
-    time.start();
-    System::String outputSlideName = System::IO::Path::GetFileNameWithoutExtension(input) + u"_" + System::ObjectExt::ToString(i) + u".png";
-    /*System::String outputSlidePath = System::IO::Path::Combine(System::IO::Path::GetDirectoryName(output), outputSlideName);*/
     auto slide = pres->get_Slides()->idx_get(i);
+    ui.plainTextEdit->appendPlainText(QString("> Page %1/%2").arg(i + 1).arg(count));
+
+    // save as SVG
+    time.start();
+    System::String outputSlideNameSvg = System::IO::Path::GetFileNameWithoutExtension(input) + u"_" + System::ObjectExt::ToString(i) + u".svg";
+    auto fileStream = System::MakeObject<System::IO::FileStream>(outputSlideNameSvg, System::IO::FileMode::Create, System::IO::FileAccess::Write);
+    slide->WriteAsSvg(fileStream);
+    ui.plainTextEdit->appendPlainText(QString("> SVG %1/%2 : %3ms").arg(sizeW * PngScale).arg(sizeH * PngScale).arg(time.elapsed()));
+
+    // get thumbnail bitmap
+    time.start();
+    auto fullres = slide->GetThumbnail(PngScale, PngScale);
+    auto thumbnail = slide->GetThumbnail(ScaleX, ScaleY);
+    ui.plainTextEdit->appendPlainText(QString("> GetThumbnails : %3ms").arg(time.elapsed()));
+
     // save to PNG
-    slide->GetThumbnail(PngScale, PngScale)->Save(outputSlideName, System::Drawing::Imaging::ImageFormat::get_Png());
+    time.start();
+    System::String outputSlideNamePng = System::IO::Path::GetFileNameWithoutExtension(input) + u"_" + System::ObjectExt::ToString(i) + u".png";
+    slide->GetThumbnail(PngScale, PngScale)->Save(outputSlideNamePng, System::Drawing::Imaging::ImageFormat::get_Png());
     ui.plainTextEdit->appendPlainText(QString("> PNG %1/%2 : %3ms").arg(sizeW * PngScale).arg(sizeH * PngScale).arg(time.elapsed()));
 
+    // save to memory BMP full res
     time.start();
-    System::String outputThmbSlideName = System::IO::Path::GetFileNameWithoutExtension(input) + u"_" + System::ObjectExt::ToString(i) + u"_thmb.png";
-    slide->GetThumbnail(ScaleX, ScaleY)->Save(outputThmbSlideName, System::Drawing::Imaging::ImageFormat::get_Png());
-    ui.plainTextEdit->appendPlainText(QString("> Thumb: %1/%2: %3ms").arg(sizeW * ScaleX).arg(sizeH * ScaleY).arg(time.elapsed()));
+    auto iostream = System::MakeObject<System::IO::MemoryStream>();
+    fullres->Save(iostream.dynamic_pointer_cast<System::IO::Stream>(), System::Drawing::Imaging::ImageFormat::get_MemoryBmp());
+    auto buffer = iostream->GetBuffer();
+    auto dataptr = buffer->data_ptr();
+    ui.plainTextEdit->appendPlainText(QString("> Memory bitmap %1/%2 : %3ms").arg(sizeW * PngScale).arg(sizeH * PngScale).arg(time.elapsed()));
+
+    //ui.plainTextEdit->appendPlainText(QString("> Thumb: %1/%2: %3ms").arg(sizeW * ScaleX).arg(sizeH * ScaleY).arg(time.elapsed()));
 
     // qt stuff
     ui.progressBar->setValue(i);
@@ -91,7 +115,8 @@ void PPTXConverterTestApp::on_pushButton_clicked()
     // create label to show thumbnail
     auto* imageLabel = new QLabel;
     imageLabel->setStyleSheet("border: 1px solid black");
-    QImage image(QString::fromStdU16String(outputThmbSlideName.ToU16Str()));
+    QImage image;
+    image.loadFromData(dataptr, buffer->get_Length());
     imageLabel->setPixmap(QPixmap::fromImage(image));
     ui.scrollAreaWidgetContents->layout()->addWidget(imageLabel);
 
