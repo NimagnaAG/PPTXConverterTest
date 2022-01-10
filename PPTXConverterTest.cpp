@@ -28,13 +28,30 @@ PPTXConverterTestApp::PPTXConverterTestApp(QWidget* parent)
   ui.setupUi(this);
   ui.progressBar->setValue(0);
   ui.scrollArea->setBackgroundRole(QPalette::Dark);
+
+  mConverter = new PowerPointConverter();
+  mConverter->moveToThread(&mConverterThread);
+
+  connect(mConverter, &PowerPointConverter::processingDone, this, &PPTXConverterTestApp::onConverterDone);
+  connect(mConverter, &PowerPointConverter::error, this, &PPTXConverterTestApp::onConverterError);
+  connect(mConverter, &PowerPointConverter::progress, this, &PPTXConverterTestApp::onConverterProgress);
+  connect(mConverter, &PowerPointConverter::statusChanged, this, &PPTXConverterTestApp::onConverterStatusChanged);
+  connect(mConverter, &PowerPointConverter::debug, this, &PPTXConverterTestApp::onConverterDebug);
+  connect(this, &PPTXConverterTestApp::startProcessing, mConverter, &PowerPointConverter::convertPowerpointFile2);
+  mConverterThread.start();
+}
+
+PPTXConverterTestApp::~PPTXConverterTestApp()
+{
+  mConverter->deleteLater();
+  mConverterThread.quit();
+  mConverterThread.wait();
 }
 
 void PPTXConverterTestApp::on_actionOpen_triggered()
 {
   QString filename = QFileDialog::getOpenFileName(this, "Open");
   ui.lineEdit->setText(filename);
-  on_pushButton_clicked();
 }
 
 void PPTXConverterTestApp::on_pushButton_clicked()
@@ -123,5 +140,91 @@ void PPTXConverterTestApp::on_pushButton_clicked()
     // update ui
     QApplication::processEvents();
   }
+}
 
+#include <asposeslidescloud/api/SlidesApi.h>
+#include <asposeslidescloud/model/ExportOptions.h>
+
+void PPTXConverterTestApp::on_pushButtonCloud_clicked()
+{
+  auto filename = ui.lineEdit->text();
+  ui.plainTextEdit->clear();
+  ui.plainTextEdit->appendPlainText(QString("Convert %1 on the cloud").arg(filename));
+
+  auto input = utility::conversions::to_string_t((filename.toUtf8().constData()));
+
+  auto api = std::make_shared<asposeslidescloud::api::SlidesApi>(utility::conversions::to_string_t("71ac8316-49ca-4e4a-84dd-7d5941ccaafc"), utility::conversions::to_string_t("8dc30cfec1501a6b574b08de50cdca4c"));
+  auto httpRequest = std::make_shared<asposeslidescloud::api::HttpContent>();
+
+  auto inputfilestream = std::make_shared<std::ifstream>(filename.toUtf8().constData(), std::ios::binary);
+  ui.plainTextEdit->appendPlainText(QString("> Filesize: %1 bytes").arg(inputfilestream->gcount()));
+  httpRequest->setData(inputfilestream);
+
+  auto format = utility::conversions::to_string_t("Png");
+  auto password = utility::string_t();
+  auto storage = utility::string_t();
+  auto fontsFolder = utility::conversions::to_string_t("fonts");
+  auto slides = std::vector<int32_t>();
+  auto exportOptions = std::make_shared<asposeslidescloud::model::ExportOptions>();
+  exportOptions->setHeight(1080);
+  exportOptions->setWidth(1920);
+  exportOptions->setDefaultRegularFont(utility::conversions::to_string_t("Arial"));
+
+  QTime time;
+  time.start();
+  const bool saveToCloud = false;
+  if (saveToCloud) {
+    // save to cloud storage
+    auto outpath = utility::conversions::to_string_t("test234");
+    api->convertAndSave(httpRequest, format, outpath).get();
+    // saved as test234.zip
+  }
+  else {
+    // save locally
+    std::ofstream fs("output.zip", std::ios::binary);
+    auto response = api->convert(httpRequest, format, password, storage, fontsFolder, slides, exportOptions).get();
+    ui.plainTextEdit->appendPlainText(QString("> Upload, convert, and download took %1 ms").arg(time.elapsed()));
+    time.start();
+    response.writeTo(fs);
+    fs.close();
+    ui.plainTextEdit->appendPlainText(QString("> Saving locally took %1 ms").arg(time.elapsed()));
+  }
+}
+
+void PPTXConverterTestApp::on_pushButtonCloudQt_clicked()
+{
+  ui.pushButtonCloudQt->setDisabled(true);
+  ui.progressBar->setMaximum(100);
+  ui.progressBar->setValue(0);
+  emit startProcessing(ui.lineEdit->text(), "download");
+}
+
+void PPTXConverterTestApp::onConverterError(const QString& error)
+{
+  ui.plainTextEdit->appendPlainText(QString("Converter Error: %1").arg(error));
+  ui.pushButtonCloudQt->setDisabled(false);
+}
+
+void PPTXConverterTestApp::onConverterDebug(const QString& debug)
+{
+  ui.plainTextEdit->appendPlainText(QString("Converter Debug: %1").arg(debug));
+}
+
+void PPTXConverterTestApp::onConverterProgress(float value)
+{
+  ui.progressBar->setValue(value * 100);
+}
+
+void PPTXConverterTestApp::onConverterStatusChanged(const PowerPointConverter::PowerPointConverterStatus& status)
+{
+  ui.plainTextEdit->appendPlainText(QString("Converter Status Change : %1 ---------------------").arg(static_cast<int>(status)));
+}
+
+void PPTXConverterTestApp::onConverterDone(const QStringList& generatedFiles)
+{
+  ui.plainTextEdit->appendPlainText("Converter Status Done!");
+  for (const auto& file : generatedFiles) {
+    ui.plainTextEdit->appendPlainText(QString("> %1").arg(file));
+  }
+  ui.pushButtonCloudQt->setDisabled(false);
 }

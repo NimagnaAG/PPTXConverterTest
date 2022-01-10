@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
+    <width>797</width>
     <height>400</height>
    </rect>
   </property>
@@ -15,13 +15,20 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_3">
-    <item row="0" column="0">
+    <item row="0" column="1">
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
-      <widget class="QWidget" name="">
-       <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,1">
+      <widget class="QWidget" name="layoutWidget">
+       <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,1,5">
+        <item row="3" column="0">
+         <widget class="QPushButton" name="pushButton">
+          <property name="text">
+           <string>Convert Local</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_2">
           <property name="text">
@@ -33,6 +40,23 @@
          <widget class="QLabel" name="label_4">
           <property name="text">
            <string>Png Factor</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0" colspan="3">
+         <widget class="Line" name="line">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QSpinBox" name="spinBoxY">
+          <property name="maximum">
+           <number>1000</number>
+          </property>
+          <property name="value">
+           <number>150</number>
           </property>
          </widget>
         </item>
@@ -66,46 +90,50 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="2">
-         <widget class="QSpinBox" name="spinBoxY">
-          <property name="maximum">
-           <number>1000</number>
-          </property>
-          <property name="value">
-           <number>150</number>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0" colspan="3">
-         <widget class="Line" name="line">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0" colspan="3">
-         <widget class="QPlainTextEdit" name="plainTextEdit"/>
-        </item>
-        <item row="3" column="0">
-         <widget class="QPushButton" name="pushButton">
-          <property name="text">
-           <string>Convert to PNG</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1" colspan="2">
-         <widget class="QLineEdit" name="lineEdit"/>
-        </item>
-        <item row="3" column="1" colspan="2">
+        <item row="3" column="1" colspan="3">
          <widget class="QProgressBar" name="progressBar">
           <property name="value">
            <number>24</number>
           </property>
          </widget>
         </item>
+        <item row="10" column="0" colspan="4">
+         <widget class="QPlainTextEdit" name="plainTextEdit"/>
+        </item>
+        <item row="0" column="1" colspan="3">
+         <widget class="QLineEdit" name="lineEdit">
+          <property name="text">
+           <string>C:/Users/ChristophNiederberge/source/repos/PPTXConverterTest/10Slides.pptx</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QPushButton" name="pushButtonCloud">
+          <property name="text">
+           <string>Convert Cloud</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QPushButton" name="pushButtonCloudQt">
+          <property name="text">
+           <string>Convert Cloud Qt</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>Bearer</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="2" colspan="2">
+         <widget class="QLineEdit" name="lineEditBearer"/>
+        </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="0">
          <widget class="QLabel" name="label">
@@ -127,7 +155,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>578</width>
+             <width>775</width>
              <height>57</height>
             </rect>
            </property>
@@ -146,7 +174,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>600</width>
+     <width>797</width>
      <height>22</height>
     </rect>
    </property>
@@ -170,6 +198,26 @@
   <action name="actionOpen">
    <property name="text">
     <string>Open...</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Bearer">
+   <property name="text">
+    <string>Update Bearer</string>
+   </property>
+  </action>
+  <action name="actionUpload_File">
+   <property name="text">
+    <string>Upload File</string>
+   </property>
+  </action>
+  <action name="actionSplit_File">
+   <property name="text">
+    <string>Split File</string>
+   </property>
+  </action>
+  <action name="actionDownload_PNGs">
+   <property name="text">
+    <string>Download PNGs</string>
    </property>
   </action>
  </widget>
