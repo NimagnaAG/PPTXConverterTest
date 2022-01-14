@@ -7,6 +7,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFileInfo>
+#include <QProcess>
 
 void PowerPointConverter::convertPowerpointFile(const QString& filepath, const QString& targetpath)
 {
@@ -23,7 +24,9 @@ void PowerPointConverter::convertPowerpointFile(const QString& filepath, const Q
     // needs to be created here to have it in the right thread
     mNetworkAccessManager = std::make_unique<QNetworkAccessManager>(this);
   }
-
+  if (!mExtractProcess) {
+    mExtractProcess = std::make_unique<QProcess>();
+  }
   // set file and target path
   setPowerpointFile(filepath);
   setTargetPath(targetpath);
@@ -485,10 +488,10 @@ void PowerPointConverter::uploadAndConvert()
 void PowerPointConverter::onUploadAndConvertTimerTimout()
 {
   const int kExpectedConversionTimeInSecs = 15.0;
-  if (mCurrentStatus == PowerPointConverterStatus::kUploadAndConvert && mSplitAndConvertTimoutCounter<= kExpectedConversionTimeInSecs*2) {
+  if (mCurrentStatus == PowerPointConverterStatus::kUploadAndConvert && mSplitAndConvertTimoutCounter <= kExpectedConversionTimeInSecs * 2) {
     mSplitAndConvertTimoutCounter++;
     // we assume kExpectedConversionTimeInSecs seconds and timer timeouts every 0.5 second
-    emit progress(0.33 + 0.33*(static_cast<float>(mSplitAndConvertTimoutCounter) / (kExpectedConversionTimeInSecs*2)));
+    emit progress(0.33 + 0.33 * (static_cast<float>(mSplitAndConvertTimoutCounter) / (kExpectedConversionTimeInSecs * 2)));
   }
 }
 
@@ -525,6 +528,8 @@ void PowerPointConverter::handleUploadAndConvertReply(QNetworkReply* reply)
   mConvertedFiles << targetFile;
 
   emit debug(QString(">> Saved result as %1 into %2").arg(saveFilename).arg(mTargetPath));
+
+
 
   // all slides downloaded
   emit progress(1.0f);

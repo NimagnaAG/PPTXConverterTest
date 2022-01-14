@@ -183,6 +183,7 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionExtract"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -218,6 +219,11 @@
   <action name="actionDownload_PNGs">
    <property name="text">
     <string>Download PNGs</string>
+   </property>
+  </action>
+  <action name="actionExtract">
+   <property name="text">
+    <string>Extract</string>
    </property>
   </action>
  </widget>

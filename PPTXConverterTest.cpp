@@ -3,6 +3,7 @@
 #include <QFileDialog>
 #include <QTime>
 #include <QBitmap>
+#include <QProcess>
 
 #include <Export/SaveFormat.h>
 #include <DOM/Presentation.h>
@@ -197,6 +198,16 @@ void PPTXConverterTestApp::on_pushButtonCloudQt_clicked()
   ui.progressBar->setMaximum(100);
   ui.progressBar->setValue(0);
   emit startProcessing(ui.lineEdit->text(), "download");
+}
+
+void PPTXConverterTestApp::on_actionExtract_triggered()
+{
+  QProcess process;
+  process.setWorkingDirectory("download");
+  process.setProgram("tar");
+  process.setArguments(QStringList() << "-x" << "-f" << "converted.zip");
+  process.start();
+  //process.execute(QString("tar -x -f %1").arg("converted.zip"));
 }
 
 void PPTXConverterTestApp::onConverterError(const QString& error)

@@ -18,6 +18,8 @@ private slots:
   void on_pushButtonCloud_clicked();
   void on_pushButtonCloudQt_clicked();
 
+  void on_actionExtract_triggered();
+
   void onConverterError(const QString& error);
   void onConverterDebug(const QString& debug);
   void onConverterProgress(float value);
